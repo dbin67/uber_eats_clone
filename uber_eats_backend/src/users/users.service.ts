@@ -1,3 +1,4 @@
+import { JwtService } from './../jwt/jwt.service';
 import { CreateAccountInput } from './dtos/create_account.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +10,7 @@ import { LoginInput } from './dtos/login.dto';
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAccount({
@@ -47,9 +49,14 @@ export class UsersService {
           error: 'Wrong password',
         };
       }
-      return { ok: true, token: 'testtoken' };
+      const token = this.jwtService.sign(user.id);
+      return { ok: true, token };
     } catch (error) {
       return { ok: false, error };
     }
+  }
+
+  async findById(id: number): Promise<User> {
+    return this.users.findOne({ where: { id } });
   }
 }
